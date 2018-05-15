@@ -1,8 +1,13 @@
 package io.spring.workshop.reactornetty.tcp;
 
 import org.junit.Test;
+import reactor.core.publisher.Mono;
 import reactor.ipc.netty.DisposableServer;
 import reactor.ipc.netty.tcp.TcpServer;
+
+import java.net.URISyntaxException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import static org.junit.Assert.assertNotNull;
 
@@ -23,6 +28,19 @@ public class TcpSendFileTests {
                                      // an ephemeral port when binding the server.
                          .secure()   // Enables default SSL configuration.
                          .wiretap()  // Applies a wire logger configuration.
+                         .handle((in, out) ->
+                                 in.receive()
+                                   .asString()
+                                   .flatMap(s -> {
+                                       try {
+                                           Path file = Paths.get(getClass().getResource(s).toURI());
+                                           return out.sendFile(file)
+                                                     .then();
+                                       } catch (URISyntaxException e) {
+                                           return Mono.error(e);
+                                       }
+                                   })
+                                   .log("tcp-server"))
                          .bindNow(); // Starts the server in a blocking fashion, and waits for it to finish initializing.
 
         assertNotNull(server);
