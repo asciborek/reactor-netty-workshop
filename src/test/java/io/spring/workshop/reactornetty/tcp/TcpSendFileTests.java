@@ -21,6 +21,8 @@ public class TcpSendFileTests {
                 TcpServer.create()   // Prepares a TCP server for configuration.
                          .port(0)    // Configures the port number as zero, this will let the system pick up
                                      // an ephemeral port when binding the server.
+                         .secure()   // Enables default SSL configuration.
+                         .wiretap()  // Applies a wire logger configuration.
                          .bindNow(); // Starts the server in a blocking fashion, and waits for it to finish initializing.
 
         assertNotNull(server);
